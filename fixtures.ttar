@@ -1,4 +1,4 @@
-# Archive created by ttar -c -f fixtures.ttar fixtures/
+# Archive created by ttar -C . -c -f fixtures.ttar fixtures/
 Directory: fixtures
 Mode: 755
 # ttar - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -115,6 +115,59 @@ Path: fixtures/26231/stat
 Lines: 1
 26231 (vim) R 5392 7446 5392 34835 7446 4218880 32533 309516 26 82 1677 44 158 99 20 0 1 0 82375 56274944 1981 18446744073709551615 4194304 6294284 140736914091744 140736914087944 139965136429984 0 0 12288 1870679807 0 0 0 17 0 0 0 31 0 0 8391624 8481048 16420864 140736914093252 140736914093279 140736914093279 140736914096107 0
 Mode: 644
+# ttar - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Path: fixtures/26231/status
+Lines: 49
+Name:	gvim
+State:	S (sleeping)
+Tgid:	26231
+Ngid:	0
+Pid:	26231
+PPid:	6429
+TracerPid:	0
+Uid:	1000	1000	1000	1000
+Gid:	1000	1000	1000	1000
+FDSize:	64
+Groups:	999 1000 1001 
+NStgid:	26231
+NSpid:	26231
+NSpgid:	26231
+NSsid:	26231
+VmPeak:	  768040 kB
+VmSize:	  713068 kB
+VmLck:	       0 kB
+VmPin:	       0 kB
+VmHWM:	   30652 kB
+VmRSS:	   30632 kB
+VmData:	  377304 kB
+VmStk:	     132 kB
+VmExe:	    2712 kB
+VmLib:	   69672 kB
+VmPTE:	     632 kB
+VmPMD:	      16 kB
+VmSwap:	       0 kB
+HugetlbPages:	       0 kB
+Threads:	4
+SigQ:	1/128288
+SigPnd:	0000000000000000
+ShdPnd:	0000000000000000
+SigBlk:	0000000000000000
+SigIgn:	0000000000003001
+SigCgt:	00000001ed824efe
+CapInh:	0000000000000000
+CapPrm:	0000000000000000
+CapEff:	0000000000000000
+CapBnd:	0000003fffffffff
+CapAmb:	0000000000000000
+Seccomp:	0
+Speculation_Store_Bypass:	thread vulnerable
+Cpus_allowed:	ffff
+Cpus_allowed_list:	0-15
+Mems_allowed:	00000000,00000001
+Mems_allowed_list:	0
+voluntary_ctxt_switches:	6340
+nonvoluntary_ctxt_switches:	361
+Mode: 444
 # ttar - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Directory: fixtures/26232
 Mode: 755
