@@ -18,8 +18,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/prometheus/procfs/bcache"
-	"github.com/prometheus/procfs/xfs"
+	"github.com/ncabatoff/procfs/bcache"
+	"github.com/ncabatoff/procfs/xfs"
 )
 
 // FS represents the pseudo-filesystem sys, which provides an interface to

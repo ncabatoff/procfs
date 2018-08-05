@@ -18,8 +18,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/prometheus/procfs"
-	"github.com/prometheus/procfs/xfs"
+	"github.com/ncabatoff/procfs"
+	"github.com/ncabatoff/procfs/xfs"
 )
 
 func TestParseStats(t *testing.T) {

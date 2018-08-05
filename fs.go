@@ -18,8 +18,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/prometheus/procfs/nfs"
-	"github.com/prometheus/procfs/xfs"
+	"github.com/ncabatoff/procfs/nfs"
+	"github.com/ncabatoff/procfs/xfs"
 )
 
 // FS represents the pseudo-filesystem proc, which provides an interface to
