@@ -37,14 +37,12 @@ type (
 		VmPeakKB                 int
 		VmSizeKB                 int
 		VmLckKB                  int
-		VmPinKB                  int
 		VmHWMKB                  int
 		VmRSSKB                  int
 		VmDataKB                 int
 		VmStkKB                  int
 		VmExeKB                  int
 		VmLibKB                  int
-		VmPMDKB                  int
 		VmPTEKB                  int
 		VmSwapKB                 int
 		VoluntaryCtxtSwitches    int
@@ -83,7 +81,6 @@ func newProcStatusBuilder() *procStatusBuilder {
 		{"VmPeak: %d kB", []interface{}{&b.ps.VmPeakKB}},
 		{"VmSize: %d kB", []interface{}{&b.ps.VmSizeKB}},
 		{"VmLck:  %d kB", []interface{}{&b.ps.VmLckKB}},
-		{"VmPin:  %d kB", []interface{}{&b.ps.VmPinKB}},
 		{"VmHWM:  %d kB", []interface{}{&b.ps.VmHWMKB}},
 		{"VmRSS:  %d kB", []interface{}{&b.ps.VmRSSKB}},
 		{"VmData: %d kB", []interface{}{&b.ps.VmDataKB}},
@@ -91,7 +88,6 @@ func newProcStatusBuilder() *procStatusBuilder {
 		{"VmExe:  %d kB", []interface{}{&b.ps.VmExeKB}},
 		{"VmLib:  %d kB", []interface{}{&b.ps.VmLibKB}},
 		{"VmPTE:  %d kB", []interface{}{&b.ps.VmPTEKB}},
-		{"VmPMD:  %d kB", []interface{}{&b.ps.VmPMDKB}},
 		{"VmSwap: %d kB", []interface{}{&b.ps.VmSwapKB}},
 		{"voluntary_ctxt_switches:    %d", []interface{}{&b.ps.VoluntaryCtxtSwitches}},
 		{"nonvoluntary_ctxt_switches: %d", []interface{}{&b.ps.NonvoluntaryCtxtSwitches}},
