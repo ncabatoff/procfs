@@ -14,9 +14,11 @@
 package procfs
 
 import (
-	"bufio"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
+	"strings"
 )
 
 // ProcStatus provides status information about the process,
@@ -49,68 +51,139 @@ type (
 		NonvoluntaryCtxtSwitches int
 	}
 
-	procStatusScanner struct {
-		format string
-		args   []interface{}
-	}
-
+	procStatusFiller  func(*ProcStatus, string) error
 	procStatusBuilder struct {
-		ps       ProcStatus
-		scanners []procStatusScanner
+		scanners map[string]procStatusFiller
 	}
 )
 
-func newProcStatusBuilder() *procStatusBuilder {
-	var b procStatusBuilder
-	b.scanners = []procStatusScanner{
-		{"Pid: %d", []interface{}{&b.ps.TID}},
-		{"TracerPid: %d", []interface{}{&b.ps.TracerPid}},
-		{"Uid: %d %d %d %d", []interface{}{
-			&b.ps.UIDReal,
-			&b.ps.UIDEffective,
-			&b.ps.UIDSavedSet,
-			&b.ps.UIDFileSystem,
-		}},
-		{"Gid: %d %d %d %d", []interface{}{
-			&b.ps.GIDReal,
-			&b.ps.GIDEffective,
-			&b.ps.GIDSavedSet,
-			&b.ps.GIDFileSystem,
-		}},
-		{"FDSize: %d", []interface{}{&b.ps.FDSize}},
-		{"VmPeak: %d kB", []interface{}{&b.ps.VmPeakKB}},
-		{"VmSize: %d kB", []interface{}{&b.ps.VmSizeKB}},
-		{"VmLck:  %d kB", []interface{}{&b.ps.VmLckKB}},
-		{"VmHWM:  %d kB", []interface{}{&b.ps.VmHWMKB}},
-		{"VmRSS:  %d kB", []interface{}{&b.ps.VmRSSKB}},
-		{"VmData: %d kB", []interface{}{&b.ps.VmDataKB}},
-		{"VmStk:  %d kB", []interface{}{&b.ps.VmStkKB}},
-		{"VmExe:  %d kB", []interface{}{&b.ps.VmExeKB}},
-		{"VmLib:  %d kB", []interface{}{&b.ps.VmLibKB}},
-		{"VmPTE:  %d kB", []interface{}{&b.ps.VmPTEKB}},
-		{"VmSwap: %d kB", []interface{}{&b.ps.VmSwapKB}},
-		{"voluntary_ctxt_switches:    %d", []interface{}{&b.ps.VoluntaryCtxtSwitches}},
-		{"nonvoluntary_ctxt_switches: %d", []interface{}{&b.ps.NonvoluntaryCtxtSwitches}},
-	}
-	return &b
+func (ps *ProcStatus) refTID() []interface{} {
+	return []interface{}{&ps.TID}
+}
+func (ps *ProcStatus) refTracerPid() []interface{} {
+	return []interface{}{&ps.TracerPid}
+}
+func (ps *ProcStatus) refUID() []interface{} {
+	return []interface{}{&ps.UIDReal, &ps.UIDEffective, &ps.UIDSavedSet, &ps.UIDFileSystem}
+}
+func (ps *ProcStatus) refGID() []interface{} {
+	return []interface{}{&ps.GIDReal, &ps.GIDEffective, &ps.GIDSavedSet, &ps.GIDFileSystem}
+}
+func (ps *ProcStatus) refFDSize() []interface{} {
+	return []interface{}{&ps.FDSize}
+}
+func (ps *ProcStatus) refVmPeakKB() []interface{} {
+	return []interface{}{&ps.VmPeakKB}
+}
+func (ps *ProcStatus) refVmSizeKB() []interface{} {
+	return []interface{}{&ps.VmSizeKB}
+}
+func (ps *ProcStatus) refVmLckKB() []interface{} {
+	return []interface{}{&ps.VmLckKB}
+}
+func (ps *ProcStatus) refVmHWMKB() []interface{} {
+	return []interface{}{&ps.VmHWMKB}
+}
+func (ps *ProcStatus) refVmRSSKB() []interface{} {
+	return []interface{}{&ps.VmRSSKB}
+}
+func (ps *ProcStatus) refVmDataKB() []interface{} {
+	return []interface{}{&ps.VmDataKB}
+}
+func (ps *ProcStatus) refVmStkKB() []interface{} {
+	return []interface{}{&ps.VmStkKB}
+}
+func (ps *ProcStatus) refVmExeKB() []interface{} {
+	return []interface{}{&ps.VmExeKB}
+}
+func (ps *ProcStatus) refVmLibKB() []interface{} {
+	return []interface{}{&ps.VmLibKB}
+}
+func (ps *ProcStatus) refVmPTEKB() []interface{} {
+	return []interface{}{&ps.VmPTEKB}
+}
+func (ps *ProcStatus) refVmSwapKB() []interface{} {
+	return []interface{}{&ps.VmSwapKB}
+}
+func (ps *ProcStatus) refVoluntaryCtxtSwitches() []interface{} {
+	return []interface{}{&ps.VoluntaryCtxtSwitches}
+}
+func (ps *ProcStatus) refNonvoluntaryCtxtSwitches() []interface{} {
+	return []interface{}{&ps.NonvoluntaryCtxtSwitches}
 }
 
-func (b *procStatusBuilder) readStatus(r *bufio.Reader) (ProcStatus, error) {
-	for _, s := range b.scanners {
-		for {
-			line, err := r.ReadString('\n')
-			if err != nil {
-				return ProcStatus{}, err
-			}
+func newFiller(format string, ref func(ps *ProcStatus) []interface{}) procStatusFiller {
+	return procStatusFiller(func(ps *ProcStatus, s string) error {
+		_, err := fmt.Sscanf(s, format, ref(ps)...)
+		return err
+	})
+}
 
-			_, err = fmt.Sscanf(line, s.format, s.args...)
-			if err == nil {
-				break
-			}
+func newProcStatusBuilder() *procStatusBuilder {
+	return &procStatusBuilder{
+		scanners: map[string]procStatusFiller{
+			"Pid":                        newFiller("%d", (*ProcStatus).refTID),
+			"TracerPid":                  newFiller("%d", (*ProcStatus).refTracerPid),
+			"Uid":                        newFiller("%d %d %d %d", (*ProcStatus).refUID),
+			"Gid":                        newFiller("%d %d %d %d", (*ProcStatus).refGID),
+			"FDSize":                     newFiller("%d", (*ProcStatus).refFDSize),
+			"VmPeak":                     newFiller("%d kB", (*ProcStatus).refVmPeakKB),
+			"VmSize":                     newFiller("%d kB", (*ProcStatus).refVmSizeKB),
+			"VmLck":                      newFiller("%d kB", (*ProcStatus).refVmLckKB),
+			"VmHWM":                      newFiller("%d kB", (*ProcStatus).refVmHWMKB),
+			"VmRSS":                      newFiller("%d kB", (*ProcStatus).refVmRSSKB),
+			"VmData":                     newFiller("%d kB", (*ProcStatus).refVmDataKB),
+			"VmStk":                      newFiller("%d kB", (*ProcStatus).refVmStkKB),
+			"VmExe":                      newFiller("%d kB", (*ProcStatus).refVmExeKB),
+			"VmLib":                      newFiller("%d kB", (*ProcStatus).refVmLibKB),
+			"VmPTE":                      newFiller("%d kB", (*ProcStatus).refVmPTEKB),
+			"VmSwap":                     newFiller("%d kB", (*ProcStatus).refVmSwapKB),
+			"voluntary_ctxt_switches":    newFiller("%d", (*ProcStatus).refVoluntaryCtxtSwitches),
+			"nonvoluntary_ctxt_switches": newFiller("%d", (*ProcStatus).refNonvoluntaryCtxtSwitches),
+		},
+	}
+}
+
+func (b *procStatusBuilder) readStatus(r io.Reader) (ProcStatus, error) {
+	contents, err := ioutil.ReadAll(r)
+	if err != nil {
+		return ProcStatus{}, err
+	}
+	s := string(contents)
+
+	var ps ProcStatus
+	for lineno := 0; s != ""; lineno++ {
+		crpos := strings.IndexByte(s, '\n')
+		if crpos == -1 {
+			return ProcStatus{}, fmt.Errorf("line %d from status file without newline: %s", lineno, s)
+		}
+		line := s[:crpos]
+		s = s[crpos+1:]
+
+		pos := strings.IndexByte(line, ':')
+		if pos == -1 {
+			return ProcStatus{}, fmt.Errorf("line %d from status file without ':': %s", lineno, line)
+		}
+
+		field := line[:pos]
+		scanner, ok := b.scanners[field]
+		if !ok {
+			continue
+		}
+
+		err = scanner(&ps, line[pos+1:])
+		// TODO: flag parse errors with some kind of "warning" error.
+		if err != nil {
+			// Be lenient about parse errors, because otherwise we miss out on some interesting
+			// procs.  For example, my Ubuntu kernel (4.4.0-130-generic #156-Ubuntu) is showing
+			// a Chromium status file with "VmLib:	18446744073709442944 kB".
+			continue
 		}
 	}
-	return b.ps, nil
+	return ps, nil
 }
+
+var psb = newProcStatusBuilder()
 
 // NewStatus returns the current status information of the process.
 func (p Proc) NewStatus() (ProcStatus, error) {
@@ -120,5 +193,5 @@ func (p Proc) NewStatus() (ProcStatus, error) {
 	}
 	defer f.Close()
 
-	return newProcStatusBuilder().readStatus(bufio.NewReader(f))
+	return psb.readStatus(f)
 }

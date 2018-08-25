@@ -43,3 +43,17 @@ func TestProcStatus(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkProcStatus(b *testing.B) {
+	p, err := FS("fixtures").NewProc(26231)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	for n := 0; n < b.N; n++ {
+		_, err := p.NewStatus()
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+}
